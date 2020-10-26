@@ -1,0 +1,81 @@
+_schema-version: "3.2"
+ID: TestHTML5AppNoBackend
+version: 0.0.1
+modules:
+- name: TestHTML5AppNoBackend-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: uaa_TestHTML5AppNoBackend
+    parameters:
+      service-key:
+        name: uaa_TestHTML5AppNoBackend-key
+  - name: TestHTML5AppNoBackend_html_repo_host
+    parameters:
+      service-key:
+        name: TestHTML5AppNoBackend_html_repo_host-key
+  - name: TestHTML5AppNoBackend-destination-service
+    parameters:
+      content-target: true
+  parameters:
+    content:
+      subaccount:
+        destinations:
+        - Name: TestAppNoBackend_TestHTML5AppNoBackend_html_repo_host
+          ServiceInstanceName: TestHTML5AppNoBackend-html5-app-host-service
+          ServiceKeyName: TestHTML5AppNoBackend_html_repo_host-key
+          sap.cloud.service: TestAppNoBackend
+        - Authentication: OAuth2UserTokenExchange
+          Name: TestAppNoBackend_uaa_TestHTML5AppNoBackend
+          ServiceInstanceName: TestHTML5AppNoBackend-xsuaa-service
+          ServiceKeyName: uaa_TestHTML5AppNoBackend-key
+          sap.cloud.service: TestAppNoBackend
+        existing_destinations_policy: update
+  build-parameters:
+    no-source: true
+- name: TestHTML5AppNoBackend_ui_deployer
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: TestHTML5AppNoBackend_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - TestHTML4AppNoBackend-content.zip
+      name: TestHTML4AppNoBackend
+      target-path: resources/
+- name: TestHTML4AppNoBackend
+  type: html5
+  path: TestHTML4AppNoBackend
+  build-parameters:
+    builder: custom
+    commands:
+    - npm run build
+    supported-platforms: []
+resources:
+- name: TestHTML5AppNoBackend-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: destination
+    service-name: TestHTML5AppNoBackend-destination-service
+    service-plan: lite
+- name: TestHTML5AppNoBackend_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: TestHTML5AppNoBackend-html5-app-host-service
+    service-plan: app-host
+- name: uaa_TestHTML5AppNoBackend
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: TestHTML5AppNoBackend-xsuaa-service
+    service-plan: application
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm install
